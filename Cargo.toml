@@ -1,0 +1,15 @@
+[package]
+name = "bc_orders_collectors"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bc_utils_lg = {path="../bc_utils_lg"}
+
+[dev-dependencies]
+criterion = { version = "0.8", features = ["html_reports"] }
+
+[[bench]]
+name = "clear"
+path = "benches/clear.rs"
+harness = false
