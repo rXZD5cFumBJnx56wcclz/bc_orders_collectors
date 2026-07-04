@@ -8,6 +8,7 @@ bc_utils_lg = {path="../bc_utils_lg"}
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
+pretty_assertions = "1"
 
 [[bench]]
 name = "clear"
