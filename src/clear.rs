@@ -1,22 +1,16 @@
 use crate::prelude::*;
-use std::collections::hash_map::ValuesMut;
 
 pub struct CLEAR;
 
-fn order_set_is_active(values: ValuesMut<String, Order>) {
-    for order in values {
-        order.is_active = false;
-    }
-}
-
 impl OrderCollector for CLEAR {
-    fn collect_orders(
-        &self,
-        cell: &TradeCell,
-    ) {
-        if cell.positions.borrow().is_empty() {
-            order_set_is_active(cell.trigger_orders.borrow_mut().values_mut());
-            order_set_is_active(cell.limit_orders.borrow_mut().values_mut());
+    fn collect_orders(&self, state: &TradeState) {
+        if state.positions.borrow().is_empty() {
+            for v in state.orders.borrow_mut().values_mut() {
+                v.is_active = false;
+            }
+            for v in state.orders_storage.borrow_mut().values_mut() {
+                v.0.is_active = false;
+            }
         }
     }
 }
@@ -33,30 +27,25 @@ mod tests {
 
     #[test]
     fn collect_orders_res_1() {
-        let trade_cell = TradeCell::new(100., vec![1.], vec![2.]);
+        let trade_cell = TradeState::new(100.);
         trade_cell
             .positions
             .borrow_mut()
-            .insert("1".to_string(), Position::default());
+            .insert(1, Position::default());
         trade_cell
-            .limit_orders
+            .orders
             .borrow_mut()
-            .insert("id_1".to_string(), Order::default());
-        let res = TradeCell::new(100., vec![1.], vec![2.]);
-        res.positions
-            .borrow_mut()
-            .insert("1".to_string(), Position::default());
-        res.limit_orders
-            .borrow_mut()
-            .insert("id_1".to_string(), Order::default());
+            .insert("id_1", Order::default());
+        let res = TradeState::new(100.);
+        res.positions.borrow_mut().insert(1, Position::default());
+        res.orders.borrow_mut().insert("id_1", Order::default());
         COLLECTOR.collect_orders(&trade_cell);
         assert_eq_pr!(&trade_cell, &res,);
-        trade_cell.positions.borrow_mut().remove("1");
-        res.positions.borrow_mut().remove("1");
-        res.limit_orders
-            .borrow_mut()
-            .entry("id_1".to_string())
-            .and_modify(|o| o.set_is_active(false));
+        trade_cell.positions.borrow_mut().remove(&1);
+        res.positions.borrow_mut().remove(&1);
+        res.orders.borrow_mut().entry("id_1").and_modify(|o| {
+            o.is_active = false;
+        });
         COLLECTOR.collect_orders(&trade_cell);
         assert_eq_pr!(&trade_cell, &res,);
     }

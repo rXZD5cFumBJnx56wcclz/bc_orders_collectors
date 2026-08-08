@@ -9,7 +9,7 @@ use bc_orders_collectors::clear::CLEAR;
 static COLLECTOR: LazyLock<CLEAR> = LazyLock::new(|| CLEAR);
 
 fn clear_1(c: &mut Criterion) {
-    let trade_cell = TradeCell::new(100., vec![1.], vec![2.]);
+    let trade_cell = TradeState::new(100.);
     c.bench_function("clear_1", |b| {
         b.iter(|| COLLECTOR.collect_orders(black_box(&trade_cell)))
     });
